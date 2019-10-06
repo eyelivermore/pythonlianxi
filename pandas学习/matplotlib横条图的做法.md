@@ -1,12 +1,39 @@
 
 # 横条图plt.barh(高度,X轴)
-## 第一,第二 版本
+
 
 ```python
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 ```
+
+### 设置中文字体
+
+
+```python
+matplotlib.rcParams['font.family']='SimHei'
+```
+
+
+```python
+n = 12
+X = np.arange(n)
+Y1 = (1-X/float(n)) * np.random.uniform(0.5,1.0,n)
+Y2 = (1-X/float(n)) * np.random.uniform(0.5,1.0,n)
+
+plt.barh(X, +Y1, facecolor='#9999ff', edgecolor='white')
+plt.barh(X, -Y2, facecolor='#ff9999', edgecolor='white')
+#设置字体的位置
+for x,y in zip(Y1,X):
+    plt.text(x+0.07, y-0.4, '%.2f' % y, ha='center', va= 'bottom')
+for x,y in zip(Y2,X):
+    plt.text(-x+(-0.06),y-0.4, "%.2f" % y, ha ='center',va = 'bottom')
+```
+
+
+![png](output_4_0.png)
+
 
 
 ```python
@@ -30,30 +57,5 @@ for x,y in zip(Y2,X):
 ```
 
 
-![png](output_2_0.png)
-
-
-
-```python
-matplotlib.rcParams['font.family']='SimHei'
-```
-
-
-```python
-n = 12
-X = np.arange(n)
-Y1 = (1-X/float(n)) * np.random.uniform(0.5,1.0,n)
-Y2 = (1-X/float(n)) * np.random.uniform(0.5,1.0,n)
-
-plt.barh(X, +Y1, facecolor='#9999ff', edgecolor='white')
-plt.barh(X, -Y2, facecolor='#ff9999', edgecolor='white')
-
-for x,y in zip(Y1,X):
-    plt.text(x+0.07, y-0.4, '%.2f' % y, ha='center', va= 'bottom')
-for x,y in zip(Y2,X):
-    plt.text(-x+(-0.06),y-0.4, "%.2f" % y, ha ='center',va = 'bottom')
-```
-
-
-![png](output_4_0.png)
+![png](output_5_0.png)
 
