@@ -62,7 +62,7 @@ class BaidustockSpider(scrapy.Spider):
                 #提取每个大循环变量href里面的股票代码
                 url = "https://gupiao.baidu.com/stock/"+stocks+".html"
                 #构造一个百度股票url
-                request = scrapy.Request(url,callback= self.parrse_stock,headers=headers)
+                request = scrapy.Request(url,callback =self.parrse_stock,headers=headers)
                 #用scrapy的一个请求方法Request生成一个请求callback参数传入一个是回调函数parrse_stock
                 yield request
                 #这个相当于是第7步再发一个Request给中间件ENGINE
