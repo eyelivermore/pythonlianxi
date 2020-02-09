@@ -36,3 +36,4 @@ print('集合中的元素不能修改')
 
 print('判断元素 x 是否在集合 s 中，存在返回 True，不存在返回 False。')
 print('"f" in a 判断f是否在a集合中',"f" in a)
+print("set")
