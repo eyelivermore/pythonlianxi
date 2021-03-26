@@ -31,7 +31,7 @@ for wo in words:
         
 # print("天龙八部人物出场次数")
 items = list(counts.items())
-items.sort(key = lambda x:x[1] , reverse = True)
+items.sort(key = lambda x:x[1] , reverse = True)#lambda x:x[1]中的这个1代表列表中元组中的下标，如果1是代表第二个元素，如果是0代表第一个元素为排序条件
 
 
 for i in range(100):
