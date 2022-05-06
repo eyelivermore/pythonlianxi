@@ -3,10 +3,10 @@ import wordcloud
 #实例调云
 w = wordcloud.WordCloud(font_path="msyh.ttc",width=1000,height=700,max_words=100,background_color = "white")
 #文件路径
-txt = "d:\\txt.txt"
+txtpash = "C:/Users/FSir/新建文本文档.txt"
 
 #打开读取文件
-with open(txt, "r", encoding = "utf-8") as f:
+with open(txtpash, "r", encoding = "utf-8") as f:
     txt = f.read()
 
 #解霸解词
