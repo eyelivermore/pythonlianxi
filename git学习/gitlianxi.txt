@@ -15,5 +15,7 @@
        例子：git commit -m "学习git第一课"
        -m 后面是改动的说明
 
+要随时掌握工作区的状态，使用git status命令
 
+用git diff可以查看修改内容
 
