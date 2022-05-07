@@ -1,0 +1,9 @@
+在Git中，我们用git log命令查看日志
+
+回退到上一个版本就可以使用git reset命令：
+例子：git reset --hard HEAD^
+
+回到已经退回的版本想回到原来的版本
+git reset --hard 1094a(这个是版本ID)
+
+Git提供了一个命令git reflog用来记录你的每一次命令
