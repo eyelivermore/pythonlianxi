@@ -7,3 +7,11 @@
 git reset --hard 1094a(这个是版本ID)
 
 Git提供了一个命令git reflog用来记录你的每一次命令
+
+要想学习好Git 就要理解工作区，缓存区和 分支
+
+git更多是在管理你的修改
+每一次修改都会被记录
+用git add命令提交到缓存区
+再用 git commit提交到分支
+每次修改，如果不用git add到暂存区，那就不会加入到commit中
