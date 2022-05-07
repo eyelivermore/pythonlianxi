@@ -7,3 +7,13 @@
 4:把一个文件放到Git仓库只需要两步。
 
         第一步，用命令git add告诉Git，把文件添加到仓库：
+        例子：git add gitlianxi.txt
+        把gitlianxi.txt添加到仓库
+
+
+5：第二步，用命令git commit告诉Git，把文件提交到仓库
+       例子：git commit -m "学习git第一课"
+       -m 后面是改动的说明
+
+
+
