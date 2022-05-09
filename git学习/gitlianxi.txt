@@ -88,3 +88,8 @@ git branch
 切换分支
 git checkout <分支名>
 
+合并分支
+git merge命令用于合并指定分支到当前分支
+git merge <指定分支名>
+merge命令是把 指定分支，合并到当前分支上
+
