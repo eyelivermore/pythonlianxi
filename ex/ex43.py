@@ -3,7 +3,7 @@ from random import randint
 from textwrap import dedent
 
 
-class Scene:
+class Scene():
     """场景"""
     def enter(self):
         print("此场景尚未配置。对它进行子类化并实现enter（）")
@@ -11,7 +11,7 @@ class Scene:
         exit(1)
 
 
-class Engine:
+class Engine():
     """游戏引擎"""
     def __init__(self, scene_map):
         self.scene_map = scene_map
@@ -189,7 +189,7 @@ class Finished(Scene):
         print("You won! Good job.")
         return 'finished'
 
-class Map:
+class Map():
     """地图类"""
 
     scenes = {
@@ -206,11 +206,13 @@ class Map:
         #初始化一个开始场景
 
     def next_scene(self, scene_name):
+        #这个设计太精妙了
         #用场景的建来调用场景的值
         val = Map.scenes.get(scene_name)
         return val
         #返回的是一个场景的类
     def opening_scene(self):
+        #这一个设计太精炒了
         #调用返回next_scene()这个方法
         return self.next_scene(self.start_scene)
 
