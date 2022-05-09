@@ -87,6 +87,7 @@ git switch master 切换到master分支
 
 查看分支
 git branch
+-r 查看本地和远程分支
 当前分支前面会标一个*号。
 
 切换分支
