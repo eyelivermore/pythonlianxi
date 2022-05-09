@@ -81,6 +81,10 @@ git clone git@github.com:<账号>/<仓库名>.git
 git checkout -b <分支名>
 -b 代表创建并切换
 
+用switch更科学
+git switch -c dev创建并切换dev分支
+git switch master 切换到master分支
+
 查看分支
 git branch
 当前分支前面会标一个*号。
@@ -97,3 +101,20 @@ merge命令是把 指定分支，合并到当前分支上
 git branch -d <需要删除分支名>
 -d 指删除
 
+
+小结
+Git鼓励大量使用分支：
+
+查看分支：git branch
+
+创建分支：git branch <name>  或者 git switch -c <name>创建并切换 分支
+
+切换分支：git checkout <name>或者git switch <name>
+
+创建+切换分支：git checkout -b <name>或者git switch -c <name>
+
+合并某分支到当前分支：git merge <name>
+
+删除分支：git branch -d <name>
+
+----------------------------------------------------------------------------------
