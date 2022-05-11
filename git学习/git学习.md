@@ -31,12 +31,12 @@
 
 * 撤销缓存区的修改
  
- git reset HEAD <file>
- 再用git checkout -- 文件名  撤销工作区的修改 
- 这样整个世界都清静了
+       git reset HEAD <file>
+       再用git checkout -- 文件名  撤销工作区的修改 
+       这样整个世界都清静了
 
-checkout(撤销工作的修改)
-reset(撤销缓存区的修改)
+      checkout(撤销工作的修改)  
+      reset(撤销缓存区的修改)
 
 # 查看日志
 
