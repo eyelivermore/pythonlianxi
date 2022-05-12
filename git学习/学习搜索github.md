@@ -8,11 +8,14 @@
  
 
 # 搜索关键字
-* in关键字
-* in:<要搜索的>
+* <要搜索内容>in:<关键字>
 * in:name,这个表示项目的名称
 * in:readme，表示这个项目作者对这个项目的描述
-* in:description，表示这个项目的简介
+* in:description，表示这个项目的简介  
+
+例如：jquery in:name 代表项目名字中含有jquery的项目    
+      jquery in:name,readme 代表项目名字和描述中有jquery的项目
+    
 
 
 ### 限制项目的更新日期和收藏数条件
