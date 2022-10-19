@@ -1,7 +1,7 @@
 import re
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import *
-from Ui_lianxi import Ui_Form
+from Ui_lianxi import Ui_Form #这一个是UI文件
 import sys
 import os 
 import pandas as pd
@@ -40,7 +40,9 @@ class WinLabel(QMainWindow,Ui_Form):
         self.sheet = 1
 
     def editsheetone(self):
+        #处理Excel文件就一张表的函数
         df = pd.read_excel(self.filename[0],header=None,names=['原数据','姓名','电话','地址','类目'])
+        #下面是读取字段 
         df['原数据'] = df['原数据'].apply(lambda x:str(x).strip())
         df['原数据'] = df['原数据'].apply(lambda x:str(x).replace('\n',''))
         df['姓名'] = df['原数据'].apply(lambda x:str(x).split('1',1)[0]) 
@@ -50,10 +52,13 @@ class WinLabel(QMainWindow,Ui_Form):
         df['地址'] = df['地址'].apply(self.expandz)
         df['类目'] = df['类目'].apply(self.expandy)
         df.to_excel(self.path+"整理后的.xlsx",index=False)
+        #保存整理后的表格
 
     def editsheettow(self):
+        #处理文件里面有多张表的函数
         df = pd.read_excel(self.filename[0],sheet_name=None,header=None,names=['原数据','姓名','电话','地址','类目'])
         l = list(df.keys())
+        #只是先读取先一个表格，再用for循环分别读取每一个表的字段
         for i in l:
             df[i]['原数据'] = df[i]['原数据'].apply(lambda x:str(x).strip())
             df[i]['原数据'] = df[i]['原数据'].apply(lambda x:str(x).replace('\n',''))
@@ -64,6 +69,7 @@ class WinLabel(QMainWindow,Ui_Form):
             df[i]['地址'] = df[i]['地址'].apply(self.expandz)
             df[i]['类目'] = df[i]['类目'].apply(self.expandy)
         with pd.ExcelWriter(self.path+"整理后.xlsx") as writer:
+        #保存整理后的表格也和单张表的方式不一样，用pd.Excelwriter保存
             for i in l:
                 df[i].to_excel(writer,sheet_name = i,index=False)
     

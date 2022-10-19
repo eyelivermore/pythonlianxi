@@ -5,7 +5,7 @@
 # Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
-
+# 这个文件是配合处理识别原始表格.py文件用的
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
