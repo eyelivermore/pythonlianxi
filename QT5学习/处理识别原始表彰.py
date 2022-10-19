@@ -1,7 +1,7 @@
 import re
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import *
-from Ui_lianxi import Ui_Form #这一个是UI文件，两个一定要同时存在
+from Ui_lianxi import Ui_Form #这一个是UI文件，两个一定要同时存在，不然没有办法运行
 import sys
 import os 
 import pandas as pd

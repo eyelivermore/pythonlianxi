@@ -6,7 +6,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 # 这个文件是配合处理识别原始表格.py文件用的
-#学习Git测试
+#修改了一下备注
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
