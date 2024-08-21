@@ -20,7 +20,7 @@
 * in:name,这个表示项目的名称
 * in:readme，表示这个项目作者对这个项目的描述
 * in:description，表示这个项目的简介
-book in:name       
+* book in:name       
 
 ### 限制项目的更新日期和收藏数条件
 * stars:>1000，表示收藏数大于1000
