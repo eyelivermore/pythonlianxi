@@ -24,7 +24,3 @@ fork用于将项目拷贝一份到自己的账号下，fork就相当于在原本
 * 语法:Language:值
 * 如：Language:java，限制所寻找的项目主要使用的语言是Java
 
-
-```python
-
-```
