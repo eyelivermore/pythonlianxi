@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>作业纸生成器 · 四线三格 / 康奈尔笔记</title>
+<style>
+  :root{
+    --row-h:12mm;
+    --row-gap:4mm;
+    --line-w:0.35mm;
+    --paper-w:210mm;
+    --paper-pad:20mm;
+    --c-color:#5b9bd5;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#e9edf2;color:#2c3440;
+    display:flex;height:100vh;overflow:hidden;
+  }
+
+  /* ================= 左侧面板 ================= */
+  .panel{
+    width:322px;flex:0 0 322px;
+    background:#fff;border-right:1px solid #dde3ea;
+    display:flex;flex-direction:column;height:100%;z-index:2;
+  }
+  .panel-head{padding:18px 20px 14px;border-bottom:1px solid #eef1f5;}
+  .panel-head h1{font-size:16px;margin:0 0 5px;letter-spacing:.3px;}
+  .panel-head p{margin:0;font-size:12px;color:#8a94a3;}
+  .panel-body{padding:18px 20px 28px;overflow-y:auto;flex:1;}
+
+  .field{margin-bottom:18px;}
+  .field-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+  .field-head label{font-size:13px;font-weight:500;color:#39424f;}
+  .field-head .hint{font-size:11px;color:#9aa5b3;}
+  .val{
+    font-size:12px;color:#4a8ac4;font-variant-numeric:tabular-nums;
+    background:#eef5fc;padding:2px 9px;border-radius:10px;min-width:58px;text-align:center;
+    transition:color .15s,background .15s;
+  }
+  .val.warn{color:#c25a5a;background:#fdeded;font-weight:600;}
+
+  /* 滑块 */
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:4px;border-radius:2px;background:#dfe6ee;
+    outline:none;margin:0;display:block;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:#5b9bd5;border:3px solid #fff;
+    box-shadow:0 1px 5px rgba(30,60,100,.35);cursor:pointer;transition:transform .15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;background:#5b9bd5;
+    border:3px solid #fff;box-shadow:0 1px 5px rgba(30,60,100,.35);cursor:pointer;
+  }
+
+  /* 下拉框 */
+  .mode-select{
+    width:100%;padding:10px 12px;
+    border:1px solid #d7dee7;border-radius:8px;
+    font-size:13px;font-family:inherit;color:#39424f;
+    background:#fff;cursor:pointer;outline:none;
+    transition:border-color .15s;appearance:none;
+    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%238a94a3' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+  }
+  .mode-select:focus{border-color:#5b9bd5;}
+
+  /* 分组标题 */
+  .group-title{
+    font-size:11px;font-weight:600;color:#8a94a3;letter-spacing:.8px;
+    margin:22px 0 12px;padding-top:16px;border-top:1px dashed #e3e9f0;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .group-title:first-child{margin-top:0;padding-top:0;border-top:none;}
+
+  /* 四线单行控制 */
+  .line-ctrl{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .line-tag{
+    width:22px;height:22px;flex:0 0 auto;border-radius:50%;
+    background:#eef5fc;color:#4a8ac4;font-size:11px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .line-ctrl select{
+    flex:1;min-width:0;padding:6px 8px;border:1px solid #d7dee7;border-radius:7px;
+    font-size:12px;font-family:inherit;color:#39424f;background:#fff;
+    cursor:pointer;outline:none;transition:border-color .15s;
+  }
+  .line-ctrl select:focus{border-color:#5b9bd5;}
+  .line-ctrl input[type=color]{
+    width:34px;height:28px;flex:0 0 auto;padding:0;border:1px solid #d7dee7;
+    border-radius:7px;background:none;cursor:pointer;
+  }
+  .line-ctrl input[type=color]::-webkit-color-swatch-wrapper{padding:2px;}
+  .line-ctrl input[type=color]::-webkit-color-swatch{border:none;border-radius:5px;}
+
+  /* 康奈尔线条控件 */
+  .cornell-line-ctrl{display:flex;gap:9px;align-items:center;}
+  .cornell-line-ctrl input[type=color]{
+    width:44px;height:34px;flex:0 0 auto;padding:0;border:1px solid #d7dee7;
+    border-radius:8px;background:none;cursor:pointer;
+  }
+  .cornell-line-ctrl input[type=color]::-webkit-color-swatch-wrapper{padding:2px;}
+  .cornell-line-ctrl input[type=color]::-webkit-color-swatch{border:none;border-radius:6px;}
+  .cornell-line-ctrl select{
+    flex:1;padding:8px 10px;border:1px solid #d7dee7;border-radius:8px;
+    font-size:12px;font-family:inherit;color:#39424f;background:#fff;
+    cursor:pointer;outline:none;
+  }
+  .cornell-line-ctrl select:focus{border-color:#5b9bd5;}
+
+  /* 统一配色 */
+  .quick{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+  .quick .txt{font-size:11px;color:#9aa5b3;flex:0 0 auto;}
+  .swatch{
+    width:22px;height:22px;border-radius:50%;border:2px solid #fff;
+    box-shadow:0 0 0 1px #d7dee7;cursor:pointer;
+    transition:transform .15s,box-shadow .15s;flex:0 0 auto;
+  }
+  .swatch:hover{transform:scale(1.14);box-shadow:0 0 0 1px #a9b7c8;}
+
+  /* 提示条 */
+  .tip{
+    display:none;margin-top:8px;padding:7px 11px;
+    font-size:11px;line-height:1.5;color:#a8662c;
+    background:#fff6e9;border:1px solid #f5ddb8;border-radius:7px;
+  }
+  .tip.show{display:block;}
+
+  /* 按钮 */
+  .btn-row{display:flex;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid #eef1f5;}
+  .btn{
+    flex:1;padding:11px 8px;border-radius:9px;border:1px solid #d7dee7;
+    background:#fff;font-size:13px;cursor:pointer;color:#39424f;
+    font-family:inherit;transition:all .15s;white-space:nowrap;
+  }
+  .btn:hover{background:#f5f8fb;border-color:#c3cedb;}
+  .btn.primary{background:#5b9bd5;border-color:#5b9bd5;color:#fff;font-weight:500;}
+  .btn.primary:hover{background:#4a8ac4;border-color:#4a8ac4;}
+
+  /* 模式显示控制 */
+  .param-cornell{display:none;}
+  body.mode-cornell .param-cornell{display:block;}
+  body.mode-cornell .param-english{display:none;}
+
+  /* ================= 右侧预览 ================= */
+  .preview{
+    flex:1;overflow:auto;padding:26px;
+    background:radial-gradient(circle at 50% 0%,#f2f5f9 0%,#e9edf2 60%);
+    position:relative;
+  }
+
+  /* 顶部工具条 */
+  .preview-bar{
+    position:sticky;top:0;left:0;z-index:6;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .preview-info{
+    display:inline-block;min-width:52px;text-align:center;
+    font-size:11px;color:#8a94a3;font-variant-numeric:tabular-nums;
+    background:rgba(255,255,255,.9);
+    padding:5px 12px;border-radius:20px;
+    backdrop-filter:blur(4px);
+    box-shadow:0 1px 4px rgba(30,50,80,.06);
+  }
+  .preview-mode{
+    display:inline-flex;
+    background:rgba(255,255,255,.9);
+    border-radius:20px;padding:2px;
+    backdrop-filter:blur(4px);
+    box-shadow:0 1px 4px rgba(30,50,80,.06);
+  }
+  .pm-btn{
+    border:none;background:transparent;
+    padding:5px 13px;border-radius:18px;
+    font-size:11px;font-family:inherit;
+    color:#8a94a3;cursor:pointer;
+    transition:background .15s,color .15s;
+    white-space:nowrap;
+  }
+  .pm-btn:hover:not(.active){color:#39424f;}
+  .pm-btn.active{background:#5b9bd5;color:#fff;font-weight:500;}
+
+  .preview-tip{
+    font-size:11px;color:#a8662c;line-height:1;
+    background:rgba(255,246,233,.92);
+    padding:7px 13px;border-radius:20px;
+    border:1px solid rgba(245,221,184,.9);
+    backdrop-filter:blur(4px);
+    box-shadow:0 1px 4px rgba(30,50,80,.06);
+  }
+
+  .paper-wrap{margin:0 auto;}
+  .paper{
+    width:var(--paper-w);
+    height:297mm;
+    overflow:hidden;
+    background:#fff;
+    padding:var(--paper-pad);
+    box-shadow:0 6px 30px rgba(30,50,80,.14);
+    border-radius:3px;
+    transform-origin: top left;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* --------- 英文四线三格 --------- */
+  .row{
+    display:flex;flex-direction:column;justify-content:space-between;
+    height:var(--row-h);margin-bottom:var(--row-gap);
+  }
+  .row:last-child{margin-bottom:0;}
+
+  /* ★ 关键：线条元素本身高度为 0，粗细完全由 border-top 决定 */
+  .ln{
+    width:100%;
+    height:0;
+    flex:0 0 auto;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* --------- 康奈尔笔记 --------- */
+  .cornell{display:flex;flex-direction:column;width:100%;}
+  .c-title{
+    flex:0 0 auto;display:flex;align-items:center;
+    padding:0 3mm;
+    border-bottom:var(--line-w) solid var(--c-color);
+  }
+  .c-label{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:3.6mm;color:var(--c-color);opacity:.45;letter-spacing:.6mm;
+  }
+  .c-body{flex:1 1 auto;display:grid;min-height:0;}
+  .c-cue{border-right:var(--line-w) solid var(--c-color);overflow:hidden;}
+  .c-notes{overflow:hidden;}
+  .c-summary{
+    flex:0 0 auto;
+    border-top:var(--line-w) solid var(--c-color);
+    padding:1.6mm 3mm;overflow:hidden;
+  }
+  .c-row{display:flex;align-items:flex-end;}
+  .c-row .ln{width:100%;}
+
+  /* 滚动条 */
+  .preview::-webkit-scrollbar,
+  .panel-body::-webkit-scrollbar{width:9px;height:9px;}
+  .preview::-webkit-scrollbar-thumb,
+  .panel-body::-webkit-scrollbar-thumb{
+    background:#c8d2de;border-radius:5px;
+    border:2px solid transparent;background-clip:content-box;
+  }
+  .preview::-webkit-scrollbar-thumb:hover,
+  .panel-body::-webkit-scrollbar-thumb:hover{background:#a9b7c8;background-clip:content-box;}
+
+  /* ================= 打印 ================= */
+  @page{size:A4;margin:0;}
+
+  @media print{
+    *{
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{
+      display:block !important;height:auto !important;
+      overflow:visible !important;margin:0 !important;padding:0 !important;
+      background:#fff !important;
+      transform:none !important;
+      zoom:1 !important;
+    }
+    .panel{display:none !important;}
+    .preview-bar{display:none !important;}
+    .preview{
+      display:block !important;flex:none !important;
+      overflow:visible !important;padding:0 !important;margin:0 !important;
+      background:#fff !important;width:auto !important;height:auto !important;
+    }
+    .paper-wrap{
+      display:block !important;
+      width:auto !important;height:auto !important;
+      margin:0 !important;
+      transform:none !important;
+      zoom:1 !important;
+    }
+    .paper{
+      display:block !important;
+      width:var(--paper-w) !important;
+      height:297mm !important;
+      overflow:hidden !important;
+      margin:0 auto !important;
+      padding:var(--paper-pad) !important;
+      box-shadow:none !important;
+      border-radius:0 !important;
+      transform:none !important;
+      zoom:1 !important;
+    }
+    .row{
+      display:flex !important;flex-direction:column !important;
+      justify-content:space-between !important;
+      height:var(--row-h) !important;margin-bottom:var(--row-gap) !important;
+    }
+    /* ★ 打印时同样保证线条高度为 0，粗细靠 border-top */
+    .ln{
+      display:block !important;
+      height:0 !important;
+      width:100% !important;
+    }
+    .cornell{display:flex !important;flex-direction:column !important;}
+    .c-body{display:grid !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 左侧面板 ============ -->
+<aside class="panel">
+  <div class="panel-head">
+    <h1>作业纸生成器</h1>
+    <p>英文四线三格 · 康奈尔笔记</p>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="group-title">作 业 纸 类 型</div>
+    <div class="field">
+      <select id="mode" class="mode-select">
+        <option value="english">英文四线三格</option>
+        <option value="cornell">康奈尔笔记</option>
+      </select>
+    </div>
+
+    <div class="group-title">纸 张 参 数</div>
+
+    <div class="field">
+      <div class="field-head"><label for="paperW">纸张宽度</label><span class="val" id="paperWOut">210 mm</span></div>
+      <input type="range" id="paperW" min="140" max="210" step="5" value="210" />
+    </div>
+
+    <div class="field">
+      <div class="field-head"><label for="pad">页边距</label><span class="val" id="padOut">20 mm</span></div>
+      <input type="range" id="pad" min="6" max="35" step="1" value="20" />
+    </div>
+
+    <div class="field">
+      <div class="field-head"><label for="lineW">线条粗细</label><span class="val" id="lineWOut">0.35 mm</span></div>
+      <input type="range" id="lineW" min="0.2" max="1.2" step="0.05" value="0.35"
+             title="建议 0.25mm 以上；低于 0.2mm 部分打印机会无法呈现" />
+    </div>
+
+    <!-- ================= 英文四线三格专属 ================= -->
+    <div class="param-english">
+
+      <div class="group-title">行 格 参 数</div>
+
+      <div class="field">
+        <div class="field-head"><label for="rows">行数</label><span class="val" id="rowsOut">12</span></div>
+        <input type="range" id="rows" min="1" max="40" step="1" value="12" />
+        <div class="tip" id="rowsTip"></div>
+      </div>
+
+      <div class="field">
+        <div class="field-head"><label for="rowH">格高（行距）</label><span class="val" id="rowHOut">12.0 mm</span></div>
+        <input type="range" id="rowH" min="6" max="24" step="0.5" value="12" />
+      </div>
+
+      <div class="field">
+        <div class="field-head"><label for="rowGap">行间距</label><span class="val" id="rowGapOut">4.0 mm</span></div>
+        <input type="range" id="rowGap" min="0" max="14" step="0.5" value="4" />
+      </div>
+
+      <div class="group-title">四 线 样 式 <span class="hint">从上到下 ①→④</span></div>
+
+      <div class="quick">
+        <span class="txt">统一配色</span>
+        <span class="swatch" data-c="#5b9bd5" style="background:#5b9bd5" title="经典蓝"></span>
+        <span class="swatch" data-c="#6fb98f" style="background:#6fb98f" title="清新绿"></span>
+        <span class="swatch" data-c="#e08a8a" style="background:#e08a8a" title="樱花粉"></span>
+        <span class="swatch" data-c="#9b8bd4" style="background:#9b8bd4" title="薰衣草紫"></span>
+        <span class="swatch" data-c="#c9a227" style="background:#c9a227" title="暖金"></span>
+        <span class="swatch" data-c="#8a94a3" style="background:#8a94a3" title="高级灰"></span>
+      </div>
+
+      <div class="line-ctrl">
+        <span class="line-tag">1</span>
+        <select class="lstyle" data-i="0">
+          <option value="solid">实线</option>
+          <option value="dashed">虚线</option>
+          <option value="dotted">点线</option>
+          <option value="dashdot">点划线</option>
+          <option value="none">隐藏</option>
+        </select>
+        <input type="color" class="lcolor" data-i="0" value="#5b9bd5" />
+      </div>
+
+      <div class="line-ctrl">
+        <span class="line-tag">2</span>
+        <select class="lstyle" data-i="1">
+          <option value="solid">实线</option>
+          <option value="dashed">虚线</option>
+          <option value="dotted">点线</option>
+          <option value="dashdot">点划线</option>
+          <option value="none">隐藏</option>
+        </select>
+        <input type="color" class="lcolor" data-i="1" value="#5b9bd5" />
+      </div>
+
+      <div class="line-ctrl">
+        <span class="line-tag">3</span>
+        <select class="lstyle" data-i="2">
+          <option value="solid">实线</option>
+          <option value="dashed">虚线</option>
+          <option value="dotted">点线</option>
+          <option value="dashdot">点划线</option>
+          <option value="none">隐藏</option>
+        </select>
+        <input type="color" class="lcolor" data-i="2" value="#5b9bd5" />
+      </div>
+
+      <div class="line-ctrl">
+        <span class="line-tag">4</span>
+        <select class="lstyle" data-i="3">
+          <option value="solid">实线</option>
+          <option value="dashed">虚线</option>
+          <option value="dotted">点线</option>
+          <option value="dashdot">点划线</option>
+          <option value="none">隐藏</option>
+        </select>
+        <input type="color" class="lcolor" data-i="3" value="#5b9bd5" />
+      </div>
+
+    </div><!-- /param-english -->
+
+    <!-- ================= 康奈尔笔记专属 ================= -->
+    <div class="param-cornell">
+
+      <div class="group-title">横 线 参 数</div>
+
+      <div class="field">
+        <div class="field-head"><label for="cRowH">横线间距</label><span class="val" id="cRowHOut">8.0 mm</span></div>
+        <input type="range" id="cRowH" min="4" max="15" step="0.5" value="8" />
+      </div>
+
+      <div class="field">
+        <div class="field-head"><label>线条颜色与样式</label></div>
+        <div class="cornell-line-ctrl">
+          <input type="color" id="cColor" value="#5b9bd5" />
+          <select id="cStyle">
+            <option value="solid">实线</option>
+            <option value="dashed">虚线</option>
+            <option value="dotted">点线</option>
+            <option value="dashdot">点划线</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="group-title">版 面 比 例</div>
+
+      <div class="field">
+        <div class="field-head"><label for="cueW">线索栏宽度</label><span class="val" id="cueWOut">30 %</span></div>
+        <input type="range" id="cueW" min="18" max="50" step="1" value="30" />
+      </div>
+
+      <div class="field">
+        <div class="field-head"><label for="titleH">标题栏高度</label><span class="val" id="titleHOut">14 mm</span></div>
+        <input type="range" id="titleH" min="8" max="30" step="1" value="14" />
+      </div>
+
+      <div class="field">
+        <div class="field-head"><label for="summaryH">总结栏高度</label><span class="val" id="summaryHOut">45 mm</span></div>
+        <input type="range" id="summaryH" min="20" max="80" step="1" value="45" />
+      </div>
+
+    </div><!-- /param-cornell -->
+
+    <div class="btn-row">
+      <button class="btn primary" id="printBtn">打印 / 存 PDF</button>
+      <button class="btn" id="resetBtn">重置</button>
+    </div>
+
+  </div>
+</aside>
+
+<!-- ============ 右侧预览 ============ -->
+<main class="preview" id="preview">
+
+  <div class="preview-bar">
+    <div class="preview-info" id="zoomLabel">100%</div>
+    <div class="preview-mode" role="group" aria-label="预览缩放模式">
+      <button type="button" class="pm-btn active" data-mode="fit">适应窗口</button>
+      <button type="button" class="pm-btn" data-mode="actual">实际大小</button>
+    </div>
+    <div class="preview-tip">💡 打印时请选择「实际大小 / 100%」，不要选「适应页面」</div>
+  </div>
+
+  <div class="paper-wrap" id="paperWrap">
+    <div class="paper" id="paper">
+      <div id="rowsEl"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var MM        = 96 / 25.4;
+  var A4_H      = 297;
+  var SAFE_GAP  = 0.6;
+
+  var root      = document.documentElement;
+  var rowsEl    = document.getElementById('rowsEl');
+  var wrapEl    = document.getElementById('paperWrap');
+  var paperEl   = document.getElementById('paper');
+  var previewEl = document.getElementById('preview');
+  var zoomLabel = document.getElementById('zoomLabel');
+  var rowsOut   = document.getElementById('rowsOut');
+  var rowsTip   = document.getElementById('rowsTip');
+
+  var previewMode = 'fit';
+
+  var DEFAULT_LINE = { style: 'solid', color: '#5b9bd5' };
+
+  var DEFAULTS = {
+    mode: 'english',
+    rows: 12, rowH: 12, rowGap: 4,
+    lineW: 0.35, paperW: 210, pad: 20,
+    lines: [
+      Object.assign({}, DEFAULT_LINE),
+      Object.assign({}, DEFAULT_LINE),
+      Object.assign({}, DEFAULT_LINE),
+      Object.assign({}, DEFAULT_LINE)
+    ],
+    cornell: {
+      rowH: 8, color: '#5b9bd5', style: 'solid',
+      cueW: 30, titleH: 14, summaryH: 45
+    }
+  };
+
+  var state = {
+    mode: DEFAULTS.mode,
+    rows: DEFAULTS.rows,
+    rowH: DEFAULTS.rowH,
+    rowGap: DEFAULTS.rowGap,
+    lineW: DEFAULTS.lineW,
+    paperW: DEFAULTS.paperW,
+    pad: DEFAULTS.pad,
+    lines: DEFAULTS.lines.map(function (l) { return Object.assign({}, l); }),
+    cornell: Object.assign({}, DEFAULTS.cornell),
+    _actualRows: null,
+    _maxRows: null
+  };
+
+  /* ---------- ★ 核心修改：用 border-top 绘制线条 ----------
+     优点：浏览器对 border 宽度有统一取整规则，同一页所有线粗细一致；
+           打印时矢量输出，不会因分辨率采样导致粗细变化。
+     dashdot 用 dashed 近似（原生 CSS 没有点划线）。 */
+  function lineCss(l) {
+    var w = state.lineW + 'mm';
+    var c = l.color;
+    switch (l.style) {
+      case 'none':
+        return 'border-top:0;';
+      case 'dashed':
+        return 'border-top:' + w + ' dashed ' + c + ';';
+      case 'dotted':
+        return 'border-top:' + w + ' dotted ' + c + ';';
+      case 'dashdot':
+        /* 原生无 dashdot，用 dashed 近似，保证粗细一致 */
+        return 'border-top:' + w + ' dashed ' + c + ';';
+      default: /* solid */
+        return 'border-top:' + w + ' solid ' + c + ';';
+    }
+  }
+
+  /* ---------- 英文四线格最大行数 ---------- */
+  function computeEnglishMaxRows() {
+    var contentH = A4_H - state.pad * 2 - SAFE_GAP;
+    if (contentH <= 0) return 0;
+    var rowH = state.rowH, rowGap = state.rowGap;
+    var max;
+    if (rowGap > 0) {
+      max = Math.floor((contentH + rowGap) / (rowH + rowGap));
+    } else {
+      max = Math.floor(contentH / rowH);
+    }
+    return Math.max(0, max);
+  }
+
+  /* ---------- 英文四线三格渲染 ---------- */
+  function buildEnglish() {
+    var maxRows = computeEnglishMaxRows();
+    var actualRows = Math.min(state.rows, maxRows);
+    state._maxRows = maxRows;
+    state._actualRows = actualRows;
+
+    if (actualRows <= 0) { rowsEl.innerHTML = ''; return; }
+
+    var s = state.lines.map(lineCss);
+    var one =
+      '<div class="row">' +
+        '<div class="ln" style="' + s[0] + '"></div>' +
+        '<div class="ln" style="' + s[1] + '"></div>' +
+        '<div class="ln" style="' + s[2] + '"></div>' +
+        '<div class="ln" style="' + s[3] + '"></div>' +
+      '</div>';
+    rowsEl.innerHTML = new Array(actualRows + 1).join(one);
+  }
+
+  /* ---------- 康奈尔笔记渲染 ---------- */
+  function buildCornell() {
+    var c = state.cornell;
+    var contentH = A4_H - state.pad * 2;
+    if (contentH < 12) contentH = 12;
+
+    var noteH = contentH - c.titleH - c.summaryH;
+    if (noteH < 8) noteH = 8;
+
+    var lineCount  = Math.max(1, Math.floor(noteH / c.rowH));
+    var actualRowH = noteH / lineCount;
+
+    var lineStyle = lineCss({ color: c.color, style: c.style });
+
+    var linesHtml = '';
+    for (var i = 0; i < lineCount; i++) {
+      linesHtml +=
+        '<div class="c-row" style="height:' + actualRowH + 'mm">' +
+          '<div class="ln" style="' + lineStyle + '"></div>' +
+        '</div>';
+    }
+
+    rowsEl.innerHTML =
+      '<div class="cornell" style="height:' + contentH + 'mm">' +
+        '<div class="c-title" style="height:' + c.titleH + 'mm">' +
+          '<span class="c-label">标题 / 日期 / 课程</span>' +
+        '</div>' +
+        '<div class="c-body" style="grid-template-columns:' + c.cueW + '% 1fr">' +
+          '<div class="c-cue">' + linesHtml + '</div>' +
+          '<div class="c-notes">' + linesHtml + '</div>' +
+        '</div>' +
+        '<div class="c-summary" style="height:' + c.summaryH + 'mm">' +
+          '<span class="c-label">总结</span>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ---------- 行数提示 ---------- */
+  function updateRowsHint() {
+    if (!rowsOut) return;
+
+    if (state.mode !== 'english') {
+      rowsOut.textContent = String(state.rows);
+      rowsOut.classList.remove('warn');
+      rowsOut.removeAttribute('title');
+      if (rowsTip) { rowsTip.classList.remove('show'); rowsTip.textContent = ''; }
+      return;
+    }
+
+    var req    = state.rows;
+    var actual = state._actualRows;
+    var max    = state._maxRows;
+
+    if (actual == null || max == null) {
+      rowsOut.textContent = String(req);
+      rowsOut.classList.remove('warn');
+      return;
+    }
+
+    if (req > max) {
+      rowsOut.textContent = actual + ' / ' + req;
+      rowsOut.classList.add('warn');
+      rowsOut.title = 'A4 纸只能容纳 ' + max + ' 行完整四线格，已自动截断。';
+      if (rowsTip) {
+        rowsTip.textContent =
+          'A4 纸最多容纳 ' + max + ' 行，已自动只保留前 ' + actual +
+          ' 行（未溢出到第二页）。如需更多行，请减小格高、行间距或页边距。';
+        rowsTip.classList.add('show');
+      }
+    } else {
+      rowsOut.textContent = String(req);
+      rowsOut.classList.remove('warn');
+      rowsOut.removeAttribute('title');
+      if (rowsTip) { rowsTip.classList.remove('show'); rowsTip.textContent = ''; }
+    }
+  }
+
+  function build() {
+    if (state.mode === 'cornell') buildCornell();
+    else buildEnglish();
+    updateRowsHint();
+  }
+
+  /* ---------- 写入 CSS 变量 ---------- */
+  function updateVars() {
+    root.style.setProperty('--row-h',     state.rowH   + 'mm');
+    root.style.setProperty('--row-gap',   state.rowGap + 'mm');
+    root.style.setProperty('--line-w',    state.lineW  + 'mm');
+    root.style.setProperty('--paper-w',   state.paperW + 'mm');
+    root.style.setProperty('--paper-pad', state.pad    + 'mm');
+    root.style.setProperty('--c-color',   state.cornell.color);
+  }
+
+  /* ---------- 自适应缩放 ---------- */
+  var fitScheduled = false;
+
+  function doFitZoom() {
+    fitScheduled = false;
+
+    paperEl.style.transform = 'none';
+    wrapEl.style.width  = 'auto';
+    wrapEl.style.height = 'auto';
+
+    var naturalW = paperEl.offsetWidth;
+    var naturalH = paperEl.offsetHeight;
+
+    var z = 1;
+    if (previewMode === 'fit') {
+      var cs = getComputedStyle(previewEl);
+      var avail = previewEl.clientWidth
+                - parseFloat(cs.paddingLeft)
+                - parseFloat(cs.paddingRight)
+                - 26;
+      if (avail <= 0) avail = naturalW;
+      z = Math.min(1, avail / naturalW);
+      if (z > 0.995) z = 1;
+    }
+
+    if (z < 1) {
+      paperEl.style.transform = 'scale(' + z + ')';
+      wrapEl.style.width  = (naturalW * z) + 'px';
+      wrapEl.style.height = (naturalH * z) + 'px';
+    } else {
+      paperEl.style.transform = 'none';
+      wrapEl.style.width  = naturalW + 'px';
+      wrapEl.style.height = naturalH + 'px';
+    }
+
+    if (zoomLabel) {
+      zoomLabel.textContent =
+        (previewMode === 'actual' ? '实际大小 ' : '') + Math.round(z * 100) + '%';
+    }
+  }
+
+  function fitZoom() {
+    if (fitScheduled) return;
+    fitScheduled = true;
+    requestAnimationFrame(doFitZoom);
+  }
+
+  /* ---------- 滑块绑定 ---------- */
+  function bindSlider(id, path, unit, digits, onChange) {
+    var el  = document.getElementById(id);
+    var out = document.getElementById(id + 'Out');
+
+    function getVal() {
+      if (typeof path === 'string') return state[path];
+      var obj = state;
+      for (var i = 0; i < path.length - 1; i++) obj = obj[path[i]];
+      return obj[path[path.length - 1]];
+    }
+    function setVal(v) {
+      if (typeof path === 'string') { state[path] = v; return; }
+      var obj = state;
+      for (var i = 0; i < path.length - 1; i++) obj = obj[path[i]];
+      obj[path[path.length - 1]] = v;
+    }
+
+    function upd() {
+      setVal(parseFloat(el.value));
+      if (out) out.textContent = getVal().toFixed(digits) + unit;
+      updateVars();
+      if (onChange) onChange();
+      fitZoom();
+    }
+    el.addEventListener('input', upd);
+    upd();
+    return upd;
+  }
+
+  bindSlider('paperW', 'paperW', ' mm', 0, null);
+  bindSlider('pad',    'pad',    ' mm', 0, build);
+  bindSlider('lineW',  'lineW',  ' mm', 2, build);
+
+  bindSlider('rows',   'rows',   '',    0, build);
+  bindSlider('rowH',   'rowH',   ' mm', 1, build);
+  bindSlider('rowGap', 'rowGap', ' mm', 1, build);
+
+  bindSlider('cRowH',    ['cornell','rowH'],     ' mm', 1, build);
+  bindSlider('cueW',     ['cornell','cueW'],     ' %',  0, build);
+  bindSlider('titleH',   ['cornell','titleH'],   ' mm', 0, build);
+  bindSlider('summaryH', ['cornell','summaryH'], ' mm', 0, build);
+
+  /* ---------- 预览模式切换 ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.pm-btn'), function (btn) {
+    btn.addEventListener('click', function () {
+      var m = btn.dataset.mode;
+      if (m === previewMode) return;
+      previewMode = m;
+      Array.prototype.forEach.call(document.querySelectorAll('.pm-btn'), function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+      fitZoom();
+    });
+  });
+
+  /* ---------- 模式切换 ---------- */
+  var modeSel = document.getElementById('mode');
+  modeSel.addEventListener('change', function () {
+    state.mode = modeSel.value;
+    document.body.classList.toggle('mode-cornell', state.mode === 'cornell');
+    build();
+    fitZoom();
+  });
+
+  /* ---------- 英文四线样式 / 颜色 ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.lstyle'), function (sel) {
+    sel.addEventListener('change', function () {
+      state.lines[+sel.dataset.i].style = sel.value;
+      buildEnglish();
+      updateRowsHint();
+    });
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.lcolor'), function (inp) {
+    inp.addEventListener('input', function () {
+      state.lines[+inp.dataset.i].color = inp.value;
+      buildEnglish();
+      updateRowsHint();
+    });
+  });
+
+  /* ---------- 统一配色快捷 ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.swatch'), function (s) {
+    s.addEventListener('click', function () {
+      var c = s.dataset.c;
+      state.lines.forEach(function (l) { l.color = c; });
+      Array.prototype.forEach.call(document.querySelectorAll('.lcolor'), function (inp) {
+        inp.value = c;
+      });
+      buildEnglish();
+      updateRowsHint();
+    });
+  });
+
+  /* ---------- 康奈尔线条颜色 / 样式 ---------- */
+  document.getElementById('cColor').addEventListener('input', function () {
+    state.cornell.color = this.value;
+    updateVars();
+    buildCornell();
+  });
+
+  document.getElementById('cStyle').addEventListener('change', function () {
+    state.cornell.style = this.value;
+    buildCornell();
+  });
+
+  /* ---------- 重置 ---------- */
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    modeSel.value = DEFAULTS.mode;
+    state.mode = DEFAULTS.mode;
+    document.body.classList.toggle('mode-cornell', false);
+
+    document.getElementById('paperW').value = DEFAULTS.paperW;
+    document.getElementById('pad').value    = DEFAULTS.pad;
+    document.getElementById('lineW').value  = DEFAULTS.lineW;
+
+    document.getElementById('rows').value   = DEFAULTS.rows;
+    document.getElementById('rowH').value   = DEFAULTS.rowH;
+    document.getElementById('rowGap').value = DEFAULTS.rowGap;
+
+    document.getElementById('cRowH').value    = DEFAULTS.cornell.rowH;
+    document.getElementById('cueW').value     = DEFAULTS.cornell.cueW;
+    document.getElementById('titleH').value   = DEFAULTS.cornell.titleH;
+    document.getElementById('summaryH').value = DEFAULTS.cornell.summaryH;
+    document.getElementById('cColor').value   = DEFAULTS.cornell.color;
+    document.getElementById('cStyle').value   = DEFAULTS.cornell.style;
+
+    ['paperW','pad','lineW','rows','rowH','rowGap','cRowH','cueW','titleH','summaryH']
+      .forEach(function (id) {
+        document.getElementById(id).dispatchEvent(new Event('input'));
+      });
+
+    state.lines   = DEFAULTS.lines.map(function (l) { return Object.assign({}, l); });
+    state.cornell = Object.assign({}, DEFAULTS.cornell);
+
+    Array.prototype.forEach.call(document.querySelectorAll('.lstyle'), function (sel) {
+      sel.value = state.lines[+sel.dataset.i].style;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.lcolor'), function (inp) {
+      inp.value = state.lines[+inp.dataset.i].color;
+    });
+
+    updateVars();
+    build();
+    fitZoom();
+  });
+
+  /* ---------- 打印 ---------- */
+  document.getElementById('printBtn').addEventListener('click', function () {
+    paperEl.style.transform = 'none';
+    wrapEl.style.transform = 'none';
+    wrapEl.style.width  = 'auto';
+    wrapEl.style.height = 'auto';
+    paperEl.style.width  = '';
+    paperEl.style.height = '';
+
+    requestAnimationFrame(function () {
+      window.print();
+      setTimeout(fitZoom, 80);
+    });
+  });
+
+  /* ---------- 初始化 ---------- */
+  updateVars();
+  build();
+
+  requestAnimationFrame(doFitZoom);
+  window.addEventListener('load', doFitZoom);
+  window.addEventListener('resize', fitZoom);
+  if (window.ResizeObserver) new ResizeObserver(fitZoom).observe(previewEl);
+})();
+</script>
+</body>
+</html>
