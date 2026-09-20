@@ -283,15 +283,14 @@
   box-sizing:border-box;
   border-right:var(--line-w) solid var(--py-color);
   border-bottom:var(--line-w) solid var(--py-color);
+  border-top:var(--line-w) solid var(--py-color);   /* ★ 修复：每行格子顶部都画线 */
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 .py-row .py-cell:first-child{
   border-left:var(--line-w) solid var(--py-color);
 }
-.py-grid > .py-row:first-child .py-cell{
-  border-top:var(--line-w) solid var(--py-color);
-}
+/* ★ 已合并到 .py-cell，此规则作废 */
   /* 拼音格：三格 + 内部两条横线（第 1 条线由 cell 上边框提供，第 4 条线由田字格上边框提供） */
   .py-pinyin{
     position:relative;
