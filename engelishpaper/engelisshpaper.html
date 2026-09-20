@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>作业纸生成器 · 四线三格 / 康奈尔笔记</title>
+<title>作业纸生成器 · 四线三格 / 康奈尔笔记 / 拼音田字格</title>
 <style>
   :root{
     --row-h:12mm;
@@ -12,6 +12,8 @@
     --paper-w:210mm;
     --paper-pad:20mm;
     --c-color:#5b9bd5;
+    /* ★ 新增：拼音田字格线条颜色变量 */
+    --py-color:#5b9bd5;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;}
@@ -133,8 +135,19 @@
   }
   .tip.show{display:block;}
 
+  /* ★ 新增：checkbox 样式（拼音田字格的“显示拼音格”用） */
+  .check{
+    display:flex;align-items:center;gap:9px;
+    font-size:13px;cursor:pointer;user-select:none;color:#39424f;
+  }
+  .check input{
+    width:16px;height:16px;accent-color:#5b9bd5;cursor:pointer;flex:0 0 auto;
+  }
+
   /* 按钮 */
   .btn-row{display:flex;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid #eef1f5;}
+  /* ★ 新增：按钮行紧凑模式（用于重置按钮单独一行） */
+  .btn-row.compact{margin-top:9px;padding-top:0;border-top:none;}
   .btn{
     flex:1;padding:11px 8px;border-radius:9px;border:1px solid #d7dee7;
     background:#fff;font-size:13px;cursor:pointer;color:#39424f;
@@ -144,10 +157,13 @@
   .btn.primary{background:#5b9bd5;border-color:#5b9bd5;color:#fff;font-weight:500;}
   .btn.primary:hover{background:#4a8ac4;border-color:#4a8ac4;}
 
-  /* 模式显示控制 */
-  .param-cornell{display:none;}
+  /* ★ 修改：模式显示控制（三模式互斥） */
+  .param-english,
+  .param-cornell,
+  .param-pinyin{display:none;}
+  body.mode-english .param-english{display:block;}
   body.mode-cornell .param-cornell{display:block;}
-  body.mode-cornell .param-english{display:none;}
+  body.mode-pinyin  .param-pinyin {display:block;}
 
   /* ================= 右侧预览 ================= */
   .preview{
@@ -217,8 +233,6 @@
     height:var(--row-h);margin-bottom:var(--row-gap);
   }
   .row:last-child{margin-bottom:0;}
-
-  /* ★ 关键：线条元素本身高度为 0，粗细完全由 border-top 决定 */
   .ln{
     width:100%;
     height:0;
@@ -248,6 +262,71 @@
   }
   .c-row{display:flex;align-items:flex-end;}
   .c-row .ln{width:100%;}
+
+  /* =========================================================
+     ★ 新增：拼音田字格样式
+     ========================================================= */
+  .py-grid{
+    display:block;
+    width:100%;
+  }
+  .py-row{
+    display:flex;
+    width:100%;
+    /* height / margin-bottom 由 JS 内联设置 */
+  }
+  .py-cell{
+    display:flex;
+    flex-direction:column;
+    /* 尺寸、颜色由 JS 内联控制 */
+    box-sizing:border-box;
+    border:var(--line-w) solid var(--py-color);
+    /* 相邻格子共用竖线：除第一个外都向左偏移一条线宽 */
+    margin-left:calc(var(--line-w) * -1);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .py-cell:first-child{
+    margin-left:0;
+  }
+  /* 拼音格：三格 + 内部两条横线（第 1 条线由 cell 上边框提供，第 4 条线由田字格上边框提供） */
+  .py-pinyin{
+    position:relative;
+    width:100%;
+    flex:0 0 auto;
+  }
+  .py-pinyin .py-line{
+    position:absolute;
+    left:0;right:0;
+    height:0;
+    border-top:var(--line-w) solid var(--py-color);
+  }
+  .py-pinyin .py-line:nth-child(1){top:33.333%;}
+  .py-pinyin .py-line:nth-child(2){top:66.667%;}
+  /* 田字格：正方形 + 内部十字虚线 */
+  .py-tian{
+    position:relative;
+    width:100%;
+    flex:0 0 auto;
+    border-top:var(--line-w) solid var(--py-color);  /* 与拼音格的分界线 */
+  }
+  .py-cell.no-pinyin .py-tian{
+    border-top:none;  /* 无拼音格时，上边界由 cell 上边框提供 */
+  }
+  .py-tian .py-tian-h{
+    position:absolute;
+    left:0;right:0;
+    top:50%;
+    height:0;
+    border-top:var(--line-w) dashed var(--py-color);
+  }
+  .py-tian .py-tian-v{
+    position:absolute;
+    top:0;bottom:0;
+    left:50%;
+    width:0;
+    border-left:var(--line-w) dashed var(--py-color);
+  }
 
   /* 滚动条 */
   .preview::-webkit-scrollbar,
@@ -307,24 +386,25 @@
       justify-content:space-between !important;
       height:var(--row-h) !important;margin-bottom:var(--row-gap) !important;
     }
-    /* ★ 打印时同样保证线条高度为 0，粗细靠 border-top */
-    .ln{
-      display:block !important;
-      height:0 !important;
-      width:100% !important;
-    }
+    .ln{display:block !important;height:0 !important;width:100% !important;}
     .cornell{display:flex !important;flex-direction:column !important;}
     .c-body{display:grid !important;}
+    /* ★ 新增：拼音田字格打印样式 */
+    .py-grid{display:block !important;}
+    .py-row{display:flex !important;width:100% !important;}
+    .py-cell{display:flex !important;flex-direction:column !important;}
+    .py-pinyin{position:relative !important;flex:0 0 auto !important;}
+    .py-tian{position:relative !important;flex:0 0 auto !important;}
   }
 </style>
 </head>
-<body>
+<body class="mode-english">
 
 <!-- ============ 左侧面板 ============ -->
 <aside class="panel">
   <div class="panel-head">
     <h1>作业纸生成器</h1>
-    <p>英文四线三格 · 康奈尔笔记</p>
+    <p>四线三格 · 康奈尔笔记 · 拼音田字格</p>
   </div>
 
   <div class="panel-body">
@@ -334,6 +414,8 @@
       <select id="mode" class="mode-select">
         <option value="english">英文四线三格</option>
         <option value="cornell">康奈尔笔记</option>
+        <!-- ★ 新增：拼音田字格选项 -->
+        <option value="pinyin">拼音田字格</option>
       </select>
     </div>
 
@@ -480,8 +562,56 @@
 
     </div><!-- /param-cornell -->
 
+    <!-- =========================================================
+         ★ 新增：拼音田字格专属参数面板
+         ========================================================= -->
+    <div class="param-pinyin">
+
+      <div class="group-title">格 子 参 数</div>
+
+      <div class="field">
+        <div class="field-head"><label for="pyCols">每行格子数</label><span class="val" id="pyColsOut">8</span></div>
+        <input type="range" id="pyCols" min="4" max="16" step="1" value="8" />
+      </div>
+
+      <div class="field">
+        <div class="field-head"><label for="pyRows">总行数</label><span class="val" id="pyRowsOut">6</span></div>
+        <input type="range" id="pyRows" min="1" max="15" step="1" value="6" />
+        <div class="tip" id="pyRowsTip"></div>
+      </div>
+
+      <div class="field">
+        <div class="field-head"><label for="pyRowGap">行间距</label><span class="val" id="pyRowGapOut">2.0 mm</span></div>
+        <input type="range" id="pyRowGap" min="0" max="8" step="0.5" value="2" />
+      </div>
+
+      <div class="group-title">样 式</div>
+
+      <!-- ★ 新增：显示拼音格开关 -->
+      <div class="field">
+        <label class="check">
+          <input type="checkbox" id="pyShowPinyin" checked />
+          显示拼音格（取消勾选则只显示田字格）
+        </label>
+      </div>
+
+      <!-- ★ 新增：拼音田字格线条颜色 -->
+      <div class="field">
+        <div class="field-head"><label>线条颜色</label></div>
+        <div class="cornell-line-ctrl">
+          <input type="color" id="pyColor" value="#5b9bd5" />
+          <span style="font-size:11px;color:#9aa5b3;">拼音格和田字格共用此颜色</span>
+        </div>
+      </div>
+
+    </div><!-- /param-pinyin -->
+
+    <!-- ★ 修改：打印和存为 PDF 拆分成两个按钮 -->
     <div class="btn-row">
-      <button class="btn primary" id="printBtn">打印 / 存 PDF</button>
+      <button class="btn primary" id="printBtn">打印</button>
+      <button class="btn primary" id="pdfBtn">存为 PDF</button>
+    </div>
+    <div class="btn-row compact">
       <button class="btn" id="resetBtn">重置</button>
     </div>
 
@@ -523,6 +653,9 @@
   var zoomLabel = document.getElementById('zoomLabel');
   var rowsOut   = document.getElementById('rowsOut');
   var rowsTip   = document.getElementById('rowsTip');
+  /* ★ 新增：拼音田字格行数提示元素 */
+  var pyRowsOut = document.getElementById('pyRowsOut');
+  var pyRowsTip = document.getElementById('pyRowsTip');
 
   var previewMode = 'fit';
 
@@ -541,6 +674,14 @@
     cornell: {
       rowH: 8, color: '#5b9bd5', style: 'solid',
       cueW: 30, titleH: 14, summaryH: 45
+    },
+    /* ★ 新增：拼音田字格默认值 */
+    pinyin: {
+      cols: 8,            // 每行格子数
+      rows: 6,            // 总行数
+      rowGap: 2,          // 行间距 mm
+      showPinyin: true,   // 是否显示拼音格
+      color: '#5b9bd5'    // 线条颜色
     }
   };
 
@@ -554,14 +695,15 @@
     pad: DEFAULTS.pad,
     lines: DEFAULTS.lines.map(function (l) { return Object.assign({}, l); }),
     cornell: Object.assign({}, DEFAULTS.cornell),
+    /* ★ 新增 */
+    pinyin: Object.assign({}, DEFAULTS.pinyin),
     _actualRows: null,
-    _maxRows: null
+    _maxRows: null,
+    _pyActualRows: null,
+    _pyMaxRows: null
   };
 
-  /* ---------- ★ 核心修改：用 border-top 绘制线条 ----------
-     优点：浏览器对 border 宽度有统一取整规则，同一页所有线粗细一致；
-           打印时矢量输出，不会因分辨率采样导致粗细变化。
-     dashdot 用 dashed 近似（原生 CSS 没有点划线）。 */
+  /* ---------- 用 border-top 绘制线条（英文四线用） ---------- */
   function lineCss(l) {
     var w = state.lineW + 'mm';
     var c = l.color;
@@ -573,9 +715,8 @@
       case 'dotted':
         return 'border-top:' + w + ' dotted ' + c + ';';
       case 'dashdot':
-        /* 原生无 dashdot，用 dashed 近似，保证粗细一致 */
         return 'border-top:' + w + ' dashed ' + c + ';';
-      default: /* solid */
+      default:
         return 'border-top:' + w + ' solid ' + c + ';';
     }
   }
@@ -651,7 +792,69 @@
       '</div>';
   }
 
-  /* ---------- 行数提示 ---------- */
+  /* =========================================================
+     ★ 新增：拼音田字格渲染
+     - 每个格子：上方拼音格（四线三格），下方田字格（正方形 + 十字虚线）
+     - 拼音格高度 = 格子宽度 × 0.45；田字格高度 = 格子宽度
+     - 超过 A4 内容区高度的行数自动截断
+     ========================================================= */
+  function buildPinyin() {
+    var p = state.pinyin;
+
+    var contentW = state.paperW - state.pad * 2;   // 内容区宽度 mm
+    var contentH = A4_H - state.pad * 2;           // 内容区高度 mm
+
+    var cols = p.cols;
+    var cellW = contentW / cols;                   // 每个格子的宽度 mm
+    var pinyinH = p.showPinyin ? cellW * 0.45 : 0; // 拼音格高度
+    var tianH = cellW;                             // 田字格高度（正方形）
+    var rowH  = pinyinH + tianH;                   // 每个格子单元的总高
+
+    // 计算最大可容纳行数
+    var maxRows;
+    if (p.rowGap > 0) {
+      maxRows = Math.floor((contentH + p.rowGap) / (rowH + p.rowGap));
+    } else {
+      maxRows = Math.floor(contentH / rowH);
+    }
+    maxRows = Math.max(0, maxRows);
+
+    var actualRows = Math.min(p.rows, maxRows);
+    state._pyMaxRows = maxRows;
+    state._pyActualRows = actualRows;
+
+    if (actualRows <= 0) { rowsEl.innerHTML = ''; return; }
+
+    // 单个格子 HTML
+    var cellClass = 'py-cell' + (p.showPinyin ? '' : ' no-pinyin');
+    var cellStyle = 'width:' + cellW + 'mm;';
+
+    var pinyinHtml = p.showPinyin
+      ? '<div class="py-pinyin" style="height:' + pinyinH + 'mm">' +
+          '<div class="py-line"></div>' +
+          '<div class="py-line"></div>' +
+        '</div>'
+      : '';
+
+    var cellHtml =
+      '<div class="' + cellClass + '" style="' + cellStyle + '">' +
+        pinyinHtml +
+        '<div class="py-tian" style="height:' + tianH + 'mm">' +
+          '<div class="py-tian-h"></div>' +
+          '<div class="py-tian-v"></div>' +
+        '</div>' +
+      '</div>';
+
+    // 一行 HTML：重复 cols 个格子
+    var rowHtml =
+      '<div class="py-row" style="height:' + rowH + 'mm;margin-bottom:' + p.rowGap + 'mm">' +
+        new Array(cols + 1).join(cellHtml) +
+      '</div>';
+
+    rowsEl.innerHTML = new Array(actualRows + 1).join(rowHtml);
+  }
+
+  /* ---------- 行数提示（英文） ---------- */
   function updateRowsHint() {
     if (!rowsOut) return;
 
@@ -691,10 +894,52 @@
     }
   }
 
+  /* ★ 新增：拼音田字格的行数提示 */
+  function updatePyRowsHint() {
+    if (!pyRowsOut) return;
+
+    if (state.mode !== 'pinyin') {
+      pyRowsOut.textContent = String(state.pinyin.rows);
+      pyRowsOut.classList.remove('warn');
+      pyRowsOut.removeAttribute('title');
+      if (pyRowsTip) { pyRowsTip.classList.remove('show'); pyRowsTip.textContent = ''; }
+      return;
+    }
+
+    var req    = state.pinyin.rows;
+    var actual = state._pyActualRows;
+    var max    = state._pyMaxRows;
+
+    if (actual == null || max == null) {
+      pyRowsOut.textContent = String(req);
+      pyRowsOut.classList.remove('warn');
+      return;
+    }
+
+    if (req > max) {
+      pyRowsOut.textContent = actual + ' / ' + req;
+      pyRowsOut.classList.add('warn');
+      pyRowsOut.title = 'A4 纸只能容纳 ' + max + ' 行完整格子，已自动截断。';
+      if (pyRowsTip) {
+        pyRowsTip.textContent =
+          'A4 纸最多容纳 ' + max + ' 行，已自动只保留前 ' + actual +
+          ' 行。如需更多行，请减少每行格子数、减小行间距或页边距。';
+        pyRowsTip.classList.add('show');
+      }
+    } else {
+      pyRowsOut.textContent = String(req);
+      pyRowsOut.classList.remove('warn');
+      pyRowsOut.removeAttribute('title');
+      if (pyRowsTip) { pyRowsTip.classList.remove('show'); pyRowsTip.textContent = ''; }
+    }
+  }
+
   function build() {
     if (state.mode === 'cornell') buildCornell();
+    else if (state.mode === 'pinyin') buildPinyin();
     else buildEnglish();
     updateRowsHint();
+    updatePyRowsHint();
   }
 
   /* ---------- 写入 CSS 变量 ---------- */
@@ -705,6 +950,8 @@
     root.style.setProperty('--paper-w',   state.paperW + 'mm');
     root.style.setProperty('--paper-pad', state.pad    + 'mm');
     root.style.setProperty('--c-color',   state.cornell.color);
+    /* ★ 新增：拼音田字格颜色 */
+    root.style.setProperty('--py-color',  state.pinyin.color);
   }
 
   /* ---------- 自适应缩放 ---------- */
@@ -797,6 +1044,11 @@
   bindSlider('titleH',   ['cornell','titleH'],   ' mm', 0, build);
   bindSlider('summaryH', ['cornell','summaryH'], ' mm', 0, build);
 
+  /* ★ 新增：拼音田字格的滑块绑定 */
+  bindSlider('pyCols',   ['pinyin','cols'],   '',    0, build);
+  bindSlider('pyRows',   ['pinyin','rows'],   '',    0, build);
+  bindSlider('pyRowGap', ['pinyin','rowGap'], ' mm', 1, build);
+
   /* ---------- 预览模式切换 ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('.pm-btn'), function (btn) {
     btn.addEventListener('click', function () {
@@ -810,11 +1062,12 @@
     });
   });
 
-  /* ---------- 模式切换 ---------- */
+  /* ★ 修改：模式切换（三模式互斥，通过 body class 控制） */
   var modeSel = document.getElementById('mode');
   modeSel.addEventListener('change', function () {
     state.mode = modeSel.value;
-    document.body.classList.toggle('mode-cornell', state.mode === 'cornell');
+    document.body.classList.remove('mode-english', 'mode-cornell', 'mode-pinyin');
+    document.body.classList.add('mode-' + state.mode);
     build();
     fitZoom();
   });
@@ -861,11 +1114,25 @@
     buildCornell();
   });
 
+  /* ---------- ★ 新增：拼音田字格的显示拼音格开关与颜色 ---------- */
+  document.getElementById('pyShowPinyin').addEventListener('change', function () {
+    state.pinyin.showPinyin = this.checked;
+    buildPinyin();
+    updatePyRowsHint();
+  });
+
+  document.getElementById('pyColor').addEventListener('input', function () {
+    state.pinyin.color = this.value;
+    updateVars();
+    buildPinyin();
+  });
+
   /* ---------- 重置 ---------- */
   document.getElementById('resetBtn').addEventListener('click', function () {
     modeSel.value = DEFAULTS.mode;
     state.mode = DEFAULTS.mode;
-    document.body.classList.toggle('mode-cornell', false);
+    document.body.classList.remove('mode-english', 'mode-cornell', 'mode-pinyin');
+    document.body.classList.add('mode-' + state.mode);
 
     document.getElementById('paperW').value = DEFAULTS.paperW;
     document.getElementById('pad').value    = DEFAULTS.pad;
@@ -882,13 +1149,23 @@
     document.getElementById('cColor').value   = DEFAULTS.cornell.color;
     document.getElementById('cStyle').value   = DEFAULTS.cornell.style;
 
-    ['paperW','pad','lineW','rows','rowH','rowGap','cRowH','cueW','titleH','summaryH']
+    /* ★ 新增：重置拼音田字格参数 */
+    document.getElementById('pyCols').value      = DEFAULTS.pinyin.cols;
+    document.getElementById('pyRows').value      = DEFAULTS.pinyin.rows;
+    document.getElementById('pyRowGap').value    = DEFAULTS.pinyin.rowGap;
+    document.getElementById('pyColor').value     = DEFAULTS.pinyin.color;
+    document.getElementById('pyShowPinyin').checked = DEFAULTS.pinyin.showPinyin;
+
+    ['paperW','pad','lineW','rows','rowH','rowGap',
+     'cRowH','cueW','titleH','summaryH',
+     'pyCols','pyRows','pyRowGap']
       .forEach(function (id) {
         document.getElementById(id).dispatchEvent(new Event('input'));
       });
 
     state.lines   = DEFAULTS.lines.map(function (l) { return Object.assign({}, l); });
     state.cornell = Object.assign({}, DEFAULTS.cornell);
+    state.pinyin  = Object.assign({}, DEFAULTS.pinyin);
 
     Array.prototype.forEach.call(document.querySelectorAll('.lstyle'), function (sel) {
       sel.value = state.lines[+sel.dataset.i].style;
@@ -902,18 +1179,48 @@
     fitZoom();
   });
 
-  /* ---------- 打印 ---------- */
-  document.getElementById('printBtn').addEventListener('click', function () {
+  /* ---------- ★ 新增：打印与存为 PDF 的通用准备 / 收尾函数 ---------- */
+  function preparePrint() {
     paperEl.style.transform = 'none';
     wrapEl.style.transform = 'none';
     wrapEl.style.width  = 'auto';
     wrapEl.style.height = 'auto';
     paperEl.style.width  = '';
     paperEl.style.height = '';
+  }
+  function afterPrint() {
+    setTimeout(fitZoom, 80);
+  }
 
+  /* ---------- ★ 修改：打印按钮（只打印） ---------- */
+  document.getElementById('printBtn').addEventListener('click', function () {
+    preparePrint();
     requestAnimationFrame(function () {
       window.print();
-      setTimeout(fitZoom, 80);
+      afterPrint();
+    });
+  });
+
+  /* ---------- ★ 新增：存为 PDF 按钮（临时改文档标题作为 PDF 文件名） ---------- */
+  document.getElementById('pdfBtn').addEventListener('click', function () {
+    var oldTitle = document.title;
+    var d = new Date();
+    var pad2 = function (n) { return n < 10 ? '0' + n : '' + n; };
+    var dateStr = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    var modeNames = {
+      english: '英文四线三格',
+      cornell: '康奈尔笔记',
+      pinyin:  '拼音田字格'
+    };
+    document.title = (modeNames[state.mode] || '作业纸') + '_' + dateStr;
+
+    preparePrint();
+    requestAnimationFrame(function () {
+      window.print();
+      setTimeout(function () {
+        document.title = oldTitle;
+        fitZoom();
+      }, 100);
     });
   });
 
