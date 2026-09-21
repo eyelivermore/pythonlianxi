@@ -276,18 +276,19 @@
     /* height / margin-bottom 由 JS 内联设置 */
   }
   .py-cell{
-    display:flex;
-    flex-direction:column;
-    /* 尺寸、颜色由 JS 内联控制 */
-    box-sizing:border-box;
-    border:var(--line-w) solid var(--py-color);
-    /* 相邻格子共用竖线：除第一个外都向左偏移一条线宽 */
-    margin-left:calc(var(--line-w) * -1);
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  display:flex;
+  flex-direction:column;
+  box-sizing:border-box;
+  /* ★ 修改：去掉四边边框和负 margin，只保留 上/右/下 三条边 */
+  border-top:var(--line-w) solid var(--py-color);
+  border-right:var(--line-w) solid var(--py-color);
+  border-bottom:var(--line-w) solid var(--py-color);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
   }
   .py-cell:first-child{
-    margin-left:0;
+  /* ★ 修改：第一个格子补左边框，其余格子无需左移 */
+  border-left:var(--line-w) solid var(--py-color);
   }
   /* 拼音格：三格 + 内部两条横线（第 1 条线由 cell 上边框提供，第 4 条线由田字格上边框提供） */
   .py-pinyin{
@@ -428,7 +429,7 @@
 
     <div class="field">
       <div class="field-head"><label for="pad">页边距</label><span class="val" id="padOut">20 mm</span></div>
-      <input type="range" id="pad" min="6" max="35" step="1" value="20" />
+      <input type="range" id="pad" min="6" max="35" step="1" value="10" />
     </div>
 
     <div class="field">
