@@ -809,7 +809,8 @@
     var cellW = contentW / cols;                   // 每个格子的宽度 mm
     var pinyinH = p.showPinyin ? cellW * 0.45 : 0; // 拼音格高度
     var tianH = cellW;                             // 田字格高度（正方形）
-    var rowH  = pinyinH + tianH;                   // 每个格子单元的总高
+    var rowH  = pinyinH + tianH + state.lineW * 2; // ★ 加上上下两条边框的厚度
+    //var rowH  = pinyinH + tianH;                   // 每个格子单元的总高
 
     // 计算最大可容纳行数
     var maxRows;
